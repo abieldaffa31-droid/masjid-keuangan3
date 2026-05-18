@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LayoutDashboard, ArrowLeftRight, Heart, BookOpen, Upload, ChevronLeft, ChevronRight, Beef, LogOut, Camera, X, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createBrowserSupabase } from '@/lib/supabase-browser'
 import Image from 'next/image'
 
@@ -18,15 +18,27 @@ const navItems = [
   { href: '/import', label: 'Import Data', icon: Upload },
 ]
 
+const LOGO_KEY = 'masjid_logo'
+
 function LogoSection({ collapsed }: { collapsed: boolean }) {
   const [logoSrc, setLogoSrc] = useState<string | null>(null)
   const [hovering, setHovering] = useState(false)
+
+  // Load logo dari localStorage saat pertama render
+  useEffect(() => {
+    const saved = localStorage.getItem(LOGO_KEY)
+    if (saved) setLogoSrc(saved)
+  }, [])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = ev => setLogoSrc(ev.target?.result as string)
+    reader.onload = ev => {
+      const result = ev.target?.result as string
+      setLogoSrc(result)
+      localStorage.setItem(LOGO_KEY, result) // simpan permanen
+    }
     reader.readAsDataURL(file)
   }
 
