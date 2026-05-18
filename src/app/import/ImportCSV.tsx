@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { parseCSVBSI, autoKategori, type CSVRow } from './csvParser'
+import { parseCSVBSI, type CSVRow } from './csvParser'
 import { supabase } from '@/lib/supabase'
 import { formatRupiah, formatTanggalPendek } from '@/lib/format'
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Info } from 'lucide-react'

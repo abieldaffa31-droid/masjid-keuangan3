@@ -49,7 +49,6 @@ export default async function InvoicePage({
   const prevFriday = addDays(tanggal, -7)   // e.g. 8 Mei
   const weekEnd    = addDays(tanggal, -1)   // e.g. 14 Mei
 
-  const bulan = prevFriday.slice(0, 7)       // YYYY-MM (bulan pekan lalu)
   const bulanIni = tanggal.slice(0, 7)       // YYYY-MM bulan sekarang
   const [thn, bln] = bulanIni.split('-').map(Number)
 

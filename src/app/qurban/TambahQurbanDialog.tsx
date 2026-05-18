@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase'
 import { Plus } from 'lucide-react'
-import { getTipeOptions, getTipe, HARGA_KAMBING, type JenisHewan } from './config'
+import { getTipeOptions, getTipe, HARGA_KAMBING } from './config'
 
 const STATUS_OPTIONS = ['Lunas', 'DP', 'Belum Bayar']
 
@@ -26,7 +26,7 @@ function SapiForm({ onClose }: { onClose: () => void }) {
   const [status, setStatus] = useState('Lunas')
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])
 
-  const tipeOptions = getTipeOptions('Sapi')
+  const _tipeOptions = getTipeOptions('Sapi')
   const selectedTipe = getTipe('Sapi', tipe)
 
   async function handleSubmit(e: React.FormEvent) {

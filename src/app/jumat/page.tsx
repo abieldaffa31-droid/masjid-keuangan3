@@ -32,7 +32,7 @@ export default async function JumatPage() {
   const list = jumatList ?? []
 
   // Ambil semua transaksi masuk untuk menghitung online infaq per pekan
-  let onlinePerPekan: Record<string, number> = {}
+  const onlinePerPekan: Record<string, number> = {}
   if (list.length > 0) {
     const dateMin = list[list.length - 1].tanggal_jumat
     const dateMax = addDays(list[0].tanggal_jumat, 6)

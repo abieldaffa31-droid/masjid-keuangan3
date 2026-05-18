@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache'
 import { supabase } from '@/lib/supabase'
-import { formatRupiah, formatTanggal } from '@/lib/format'
+import { formatRupiah } from '@/lib/format'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -43,7 +43,7 @@ export default async function QurbanPage() {
 
   const sapiList    = list.filter(r => r.jenis_hewan === 'Sapi')
   const kambingList = list.filter(r => r.jenis_hewan === 'Kambing')
-  const totalHarga  = list.reduce((s, r) => s + (r.harga ?? 0) * ((r as any).jumlah ?? 1), 0)
+  const totalHarga  = list.reduce((s, r) => s + (r.harga ?? 0), 0)
 
   // Jumlah sapi = grup yang sudah penuh (tepat 7 orang)
   const sapiGrupCount: Record<string, number> = {}
@@ -72,7 +72,7 @@ export default async function QurbanPage() {
 
   // Kambing per tipe — pakai kolom jumlah
   const kambingByTipe = kambingList.reduce<Record<string, number>>((a, r) => {
-    a[r.tipe] = (a[r.tipe] ?? 0) + ((r as any).jumlah ?? 1); return a
+    a[r.tipe] = (a[r.tipe] ?? 0) + 1; return a
   }, {})
   const totalKambing = Object.values(kambingByTipe).reduce((s, n) => s + n, 0)
 

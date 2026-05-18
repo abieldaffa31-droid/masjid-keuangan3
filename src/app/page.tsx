@@ -69,7 +69,7 @@ async function getDashboardData() {
   const qurbanSapi    = Object.values(sapiGrupCount).filter(n => n === 7).length
   const qurbanKambing = qurbanList
     .filter(r => r.jenis_hewan === 'Kambing')
-    .reduce((s, r) => s + ((r as any).jumlah ?? 1), 0)
+    .length
   const totalQurbanHarga = qurbanList.reduce((s, r) => s + (r.harga ?? 0), 0)
 
   return {
