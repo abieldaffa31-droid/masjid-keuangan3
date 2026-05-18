@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, ArrowLeftRight, Heart, BookOpen, Upload, ChevronLeft, ChevronRight, Beef, LogOut, Camera } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, Heart, BookOpen, Upload, ChevronLeft, ChevronRight, Beef, LogOut, Camera, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { createBrowserSupabase } from '@/lib/supabase-browser'
@@ -91,10 +91,21 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   return (
     <aside
       className={cn(
-        'relative h-full min-h-screen bg-green-900 text-white flex flex-col transition-all duration-300',
+        'relative h-screen bg-green-900 text-white flex flex-col transition-all duration-300 overflow-y-auto',
         collapsed ? 'w-16' : 'w-64'
       )}
     >
+      {/* Tombol tutup — hanya di mobile */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="lg:hidden absolute top-3 right-3 z-10 p-1.5 rounded-lg text-green-300 hover:text-white hover:bg-green-800 transition-colors"
+          title="Tutup menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
+
       <LogoSection collapsed={collapsed} />
 
       {/* Nav */}
