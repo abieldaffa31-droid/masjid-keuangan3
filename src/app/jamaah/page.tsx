@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { formatRupiah } from '@/lib/format'
 import { PrintButton } from './PrintButton'
 import { DateRangePicker } from './DateRangePicker'
+import Image from 'next/image'
 
 export const dynamic = 'force-dynamic'
 
@@ -124,8 +125,8 @@ export default async function JamaahPage({ searchParams }: PageProps) {
             <p className="text-green-300 text-sm mt-0.5">Laporan Keuangan untuk Jamaah</p>
             <p className="text-green-200 text-xs mt-1">{d.tanggalUpdate}</p>
           </div>
-          <div className="text-right">
-            <div className="text-4xl">🕌</div>
+          <div className="text-right flex flex-col items-end gap-2">
+            <Image src="/logo.png" alt="Logo Masjid Pogung Raya" width={80} height={42} className="object-contain" />
             <PrintButton />
           </div>
         </div>

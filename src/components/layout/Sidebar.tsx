@@ -52,12 +52,14 @@ function LogoSection({ collapsed }: { collapsed: boolean }) {
           onMouseLeave={() => setHovering(false)}
           title="Klik untuk ganti logo"
         >
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-green-500 flex items-center justify-center">
-            {logoSrc ? (
-              <Image src={logoSrc} alt="Logo" width={40} height={40} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-lg font-bold text-white">م</span>
-            )}
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-green-700 flex items-center justify-center p-1">
+            <Image
+              src={logoSrc ?? '/logo.png'}
+              alt="Logo"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain"
+            />
           </div>
           {/* Overlay saat hover */}
           {hovering && (

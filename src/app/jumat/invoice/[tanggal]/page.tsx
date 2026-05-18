@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { formatRupiah } from '@/lib/format'
 import { PrintButton } from './PrintButton'
+import Image from 'next/image'
 
 export const dynamic = 'force-dynamic'
 
@@ -155,8 +156,8 @@ export default async function InvoicePage({
         <div className="bg-[#1E5631] text-white px-8 py-6 print:px-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center text-3xl">
-                🕌
+              <div className="w-14 h-14 rounded-full bg-white/10 border-2 border-white/30 flex items-center justify-center overflow-hidden p-1">
+                <Image src="/logo.png" alt="Logo Masjid" width={48} height={48} className="object-contain" />
               </div>
               <div>
                 <p className="text-xl font-bold tracking-wide">MASJID POGUNG RAYA</p>
