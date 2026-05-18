@@ -106,6 +106,9 @@ export default function LoginPage() {
         <p className="text-center text-green-400 text-xs mt-6">
           © 2025 Masjid Pogung Raya — Sistem Keuangan Internal
         </p>
+        <p className="text-center text-yellow-300 text-xs mt-2 break-all">
+          DEBUG: {process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'UNDEFINED'}
+        </p>
       </div>
     </div>
   )
