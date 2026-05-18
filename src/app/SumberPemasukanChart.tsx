@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { supabase } from '@/lib/supabase'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 // ── Warna ─────────────────────────────────────────────────────────────────────
 const WARNA: Record<string, string> = {
@@ -74,56 +73,52 @@ function DonutCard({ title, data, loading }: { title: string; data: ChartRow[]; 
   const total = data.reduce((s, d) => s + d.value, 0)
 
   return (
-    <Card className="border-0 shadow-sm flex-1 min-w-0">
-      <CardHeader className="pb-1 pt-4 px-4">
-        <CardTitle className="text-sm font-semibold text-gray-700">{title}</CardTitle>
-        {!loading && data.length > 0 && (
-          <p className="text-xs text-gray-400">Total: {fmt(total)}</p>
-        )}
-      </CardHeader>
-      <CardContent className="px-4 pb-4">
-        {loading ? (
-          <div className="h-40 flex items-center justify-center text-sm text-gray-400 animate-pulse">
-            Memuat data…
+    <div className="bg-white rounded-2xl shadow-sm border border-[#EDE5D8] flex-1 min-w-0 p-4">
+      <p className="text-sm font-semibold text-gray-700 mb-0.5">{title}</p>
+      {!loading && data.length > 0 && (
+        <p className="text-xs text-gray-400 mb-3">Total: {fmt(total)}</p>
+      )}
+      {loading ? (
+        <div className="h-40 flex items-center justify-center text-sm text-gray-400 animate-pulse">
+          Memuat data…
+        </div>
+      ) : data.length === 0 ? (
+        <div className="h-40 flex items-center justify-center text-sm text-gray-400">
+          Belum ada data
+        </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          <div className="shrink-0">
+            <ResponsiveContainer width={148} height={148}>
+              <PieChart>
+                <Pie data={data} cx="50%" cy="50%"
+                  innerRadius={40} outerRadius={66}
+                  dataKey="value" stroke="none" paddingAngle={2}
+                >
+                  {data.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-        ) : data.length === 0 ? (
-          <div className="h-40 flex items-center justify-center text-sm text-gray-400">
-            Belum ada data
-          </div>
-        ) : (
-          <div className="flex items-center gap-3">
-            <div className="shrink-0">
-              <ResponsiveContainer width={148} height={148}>
-                <PieChart>
-                  <Pie data={data} cx="50%" cy="50%"
-                    innerRadius={40} outerRadius={66}
-                    dataKey="value" stroke="none" paddingAngle={2}
-                  >
-                    {data.map((e, i) => <Cell key={i} fill={e.fill} />)}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex-1 space-y-2.5 min-w-0">
-              {data.map((d) => (
-                <div key={d.name} className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0 mt-0.5"
-                          style={{ backgroundColor: d.fill }} />
-                    <span className="text-xs text-gray-600 leading-tight">{d.name}</span>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-xs font-bold text-gray-700">{d.persen}%</p>
-                    <p className="text-xs text-gray-400">{fmt(d.value)}</p>
-                  </div>
+          <div className="flex-1 space-y-2.5 min-w-0">
+            {data.map((d) => (
+              <div key={d.name} className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0 mt-0.5"
+                        style={{ backgroundColor: d.fill }} />
+                  <span className="text-xs text-gray-600 leading-tight">{d.name}</span>
                 </div>
-              ))}
-            </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs font-bold text-gray-700">{d.persen}%</p>
+                  <p className="text-xs text-gray-400">{fmt(d.value)}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -167,14 +162,14 @@ export function SumberPemasukanChart() {
   }, [])
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <h3 className="text-base font-semibold text-gray-800">Sumber Pemasukan</h3>
-        <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-          Auto-update dari CSV
+    <div className="h-full">
+      <div className="flex items-center gap-2 mb-3">
+        <h3 className="text-sm font-bold text-gray-800">Sumber Pemasukan</h3>
+        <span className="text-xs text-gray-400 bg-[#F0EAE0] px-2 py-0.5 rounded-full">
+          Auto-update
         </span>
       </div>
-      <div className="flex gap-4">
+      <div className="flex gap-3">
         <DonutCard title="Operasional" data={opRows} loading={loading} />
         <DonutCard title="Wakaf"       data={wkRows} loading={loading} />
       </div>

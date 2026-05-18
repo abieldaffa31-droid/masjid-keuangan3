@@ -17,8 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className={`${inter.className} bg-gray-50`}>
+      <body className={`${inter.className} bg-[#F5F0E8]`}>
         <AppShell>{children}</AppShell>
+
       </body>
     </html>
   )

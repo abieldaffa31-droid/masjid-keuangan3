@@ -9,6 +9,7 @@ const pageTitles: Record<string, string> = {
   '/wakaf': 'Program Wakaf',
   '/qurban': 'Qurban',
   '/jumat': 'Infaq Jumat',
+  '/jamaah': 'Info Jamaah',
   '/import': 'Import Data',
 }
 
@@ -25,18 +26,17 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   }).format(now)
 
   return (
-    <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex items-center justify-between gap-3">
+    <header className="bg-[#F5F0E8]/80 backdrop-blur-sm border-b border-[#E2D9CC] px-4 md:px-6 py-3.5 flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
-        {/* Hamburger button - hanya tampil di mobile */}
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+          className="lg:hidden p-1.5 rounded-lg text-[#5A7A65] hover:bg-[#E8DDD0] transition-colors"
         >
           <Menu className="w-5 h-5" />
         </button>
-        <h1 className="text-lg md:text-xl font-bold text-gray-800">{title}</h1>
+        <h1 className="text-base md:text-lg font-bold text-[#1A2E22]">{title}</h1>
       </div>
-      <p className="text-xs md:text-sm text-gray-500 hidden sm:block">{tanggal}</p>
+      <p className="text-xs md:text-sm text-[#7A9080] hidden sm:block">{tanggal}</p>
     </header>
   )
 }

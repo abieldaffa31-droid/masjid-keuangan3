@@ -1,16 +1,13 @@
 import { supabase } from '@/lib/supabase'
 import { formatRupiah } from '@/lib/format'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
 import {
-  Wallet,
   TrendingUp,
   TrendingDown,
   Heart,
   ArrowUpRight,
   ArrowDownRight,
   Beef,
+  Wallet,
 } from 'lucide-react'
 import { SumberPemasukanChart } from './SumberPemasukanChart'
 
@@ -41,10 +38,9 @@ async function getDashboardData() {
         .order('tanggal_jumat', { ascending: false }),
       supabase
         .from('hewan_qurban')
-        .select('jenis_hewan, grup, harga, status, jumlah'),
+        .select('jenis_hewan, grup, harga, status, keterangan, jumlah'),
     ])
 
-  // Saldo bank = saldo terakhir di transaksi (sudah operasional, wakaf dicatat terpisah)
   const saldoBank = transaksiResult.data?.[0]?.saldo ?? 0
 
   let totalMasuk = 0
@@ -61,17 +57,20 @@ async function getDashboardData() {
     jumatResult.data?.reduce((sum, j) => sum + (j.total ?? 0), 0) ?? 0
 
   const qurbanList = qurbanResult.data ?? []
-  // Sapi = jumlah grup penuh (7 orang)
+  const sapiList = qurbanList.filter(r => r.jenis_hewan === 'Sapi')
   const sapiGrupCount: Record<string, number> = {}
-  for (const r of qurbanList.filter(r => r.jenis_hewan === 'Sapi')) {
+  for (const r of sapiList.filter(r => r.keterangan !== '1_ekor_penuh')) {
     const g = r.grup ?? ''
     sapiGrupCount[g] = (sapiGrupCount[g] ?? 0) + 1
   }
-  const qurbanSapi    = Object.values(sapiGrupCount).filter(n => n === 7).length
+  const qurbanSapi =
+    Object.values(sapiGrupCount).filter(n => n === 7).length +
+    sapiList.filter(r => r.keterangan === '1_ekor_penuh').length
   const qurbanKambing = qurbanList
     .filter(r => r.jenis_hewan === 'Kambing')
-    .length
-  const totalQurbanHarga = qurbanList.reduce((s, r) => s + (r.harga ?? 0), 0)
+    .reduce((s, r) => s + ((r as { jumlah?: number }).jumlah ?? 1), 0)
+
+  const bulanNama = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(now)
 
   return {
     saldoBank,
@@ -83,173 +82,173 @@ async function getDashboardData() {
     qurbanTotal: qurbanList.length,
     qurbanSapi,
     qurbanKambing,
-    totalQurbanHarga,
+    bulanNama,
   }
 }
 
 export default async function DashboardPage() {
-  const { saldoBank, totalMasuk, totalKeluar, totalWakaf, totalJumatBulanIni, jumatCount, qurbanTotal, qurbanSapi, qurbanKambing, totalQurbanHarga } =
-    await getDashboardData()
+  const {
+    saldoBank, totalMasuk, totalKeluar, totalWakaf,
+    totalJumatBulanIni, jumatCount, qurbanTotal,
+    qurbanSapi, qurbanKambing, bulanNama,
+  } = await getDashboardData()
 
   const progressWakaf = Math.min((totalWakaf / TARGET_WAKAF) * 100, 100)
-
-  const kpiCards = [
-    {
-      title: 'Saldo Bank',
-      value: formatRupiah(saldoBank),
-      icon: Wallet,
-      color: 'text-green-600',
-      bg: 'bg-green-50',
-      badge: 'Saldo Saat Ini',
-    },
-    {
-      title: 'Total Pemasukan Bulan Ini',
-      value: formatRupiah(totalMasuk),
-      icon: TrendingUp,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
-      badge: '↑ Pemasukan',
-    },
-    {
-      title: 'Total Pengeluaran Bulan Ini',
-      value: formatRupiah(totalKeluar),
-      icon: TrendingDown,
-      color: 'text-red-600',
-      bg: 'bg-red-50',
-      badge: '↓ Pengeluaran',
-    },
-    {
-      title: 'Infaq Jumat Bulan Ini',
-      value: formatRupiah(totalJumatBulanIni),
-      icon: Heart,
-      color: 'text-amber-600',
-      bg: 'bg-amber-50',
-      badge: `${jumatCount} Pekan`,
-    },
-  ]
+  const selisih = totalMasuk - totalKeluar
 
   return (
-    <div className="space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        {kpiCards.map((card) => (
-          <Card key={card.title} className="border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-500 font-medium">{card.title}</p>
-                  <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
-                  <Badge variant="secondary" className="text-xs">
-                    {card.badge}
-                  </Badge>
-                </div>
-                <div className={`p-3 rounded-xl ${card.bg}`}>
-                  <card.icon className={`w-6 h-6 ${card.color}`} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+    <div className="space-y-5">
+
+      {/* ── HERO SALDO CARD ───────────────────────────────────────── */}
+      <div className="rounded-2xl bg-[#1A3D2B] text-white p-6 md:p-8 relative overflow-hidden">
+        {/* decorative circles */}
+        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/5 pointer-events-none" />
+        <div className="absolute -bottom-16 -right-6 w-64 h-64 rounded-full bg-white/5 pointer-events-none" />
+
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-1">
+            <Wallet className="w-4 h-4 text-[#6AAF88]" />
+            <p className="text-[#A8C5B5] text-sm font-medium">Saldo Operasional</p>
+          </div>
+          <p className="text-4xl md:text-5xl font-bold tracking-tight mt-1">
+            {formatRupiah(saldoBank)}
+          </p>
+          <p className="text-[#6AAF88] text-sm mt-2">Saldo rekening bank aktif</p>
+        </div>
+
+        {/* 3 stat pills */}
+        <div className="relative grid grid-cols-3 gap-3 mt-6">
+          <div className="bg-white/10 rounded-xl p-3">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-300" />
+              <p className="text-[#A8D8B8] text-xs">Pemasukan</p>
+            </div>
+            <p className="text-white font-semibold text-sm">{formatRupiah(totalMasuk)}</p>
+            <p className="text-[#6AAF88] text-xs mt-0.5">{bulanNama}</p>
+          </div>
+          <div className="bg-white/10 rounded-xl p-3">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <TrendingDown className="w-3.5 h-3.5 text-rose-300" />
+              <p className="text-[#A8D8B8] text-xs">Pengeluaran</p>
+            </div>
+            <p className="text-white font-semibold text-sm">{formatRupiah(totalKeluar)}</p>
+            <p className="text-[#6AAF88] text-xs mt-0.5">{bulanNama}</p>
+          </div>
+          <div className="bg-white/10 rounded-xl p-3">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <Heart className="w-3.5 h-3.5 text-amber-300" />
+              <p className="text-[#A8D8B8] text-xs">Infaq Jumat</p>
+            </div>
+            <p className="text-white font-semibold text-sm">{formatRupiah(totalJumatBulanIni)}</p>
+            <p className="text-[#6AAF88] text-xs mt-0.5">{jumatCount} pekan</p>
+          </div>
+        </div>
       </div>
 
-      {/* Qurban */}
-      {qurbanTotal > 0 && (
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-orange-50 rounded-xl">
-                  <Beef className="w-5 h-5 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">Program Qurban</p>
-                  <p className="text-xs text-gray-400">{formatRupiah(totalQurbanHarga)}</p>
-                </div>
-              </div>
-              <div className="flex gap-4 text-center">
-                <div>
-                  <p className="text-xl font-bold text-orange-600">{qurbanSapi}</p>
-                  <p className="text-xs text-gray-400">🐄 Sapi</p>
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-amber-600">{qurbanKambing}</p>
-                  <p className="text-xs text-gray-400">🐐 Kambing</p>
-                </div>
-              </div>
+      {/* ── ROW: Wakaf + Qurban ───────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* Wakaf Progress */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#EDE5D8]">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+              <Heart className="w-4 h-4 text-green-700" />
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Sumber Pemasukan */}
-      <SumberPemasukanChart />
-
-      {/* Progress Wakaf */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-green-800">
-            <Heart className="w-5 h-5 text-green-600" />
-            Program Wakaf Pembebasan Lahan
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between items-end">
             <div>
-              <p className="text-sm text-gray-500">Terkumpul</p>
-              <p className="text-3xl font-bold text-green-700">
-                {formatRupiah(totalWakaf)}
-              </p>
+              <p className="text-sm font-bold text-gray-800">Program Wakaf</p>
+              <p className="text-xs text-gray-400">Pembebasan Lahan</p>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-end mb-3">
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Terkumpul</p>
+              <p className="text-2xl font-bold text-green-700">{formatRupiah(totalWakaf)}</p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">Target</p>
-              <p className="text-xl font-semibold text-gray-700">
-                {formatRupiah(TARGET_WAKAF)}
-              </p>
+              <p className="text-xs text-gray-400 mb-0.5">Target</p>
+              <p className="text-sm font-semibold text-gray-500">{formatRupiah(TARGET_WAKAF)}</p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Progress value={progressWakaf} className="h-4 bg-green-100" />
-            <div className="flex justify-between text-sm">
-              <span className="text-green-700 font-semibold">
-                {progressWakaf.toFixed(1)}% tercapai
-              </span>
-              <span className="text-gray-500">
-                Sisa: {formatRupiah(TARGET_WAKAF - totalWakaf)}
-              </span>
+          <div className="w-full bg-green-100 rounded-full h-2.5 overflow-hidden mb-2">
+            <div
+              className="h-2.5 bg-green-600 rounded-full transition-all"
+              style={{ width: `${progressWakaf}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-green-700 font-semibold">{progressWakaf.toFixed(1)}% tercapai</span>
+            <span className="text-gray-400">Sisa {formatRupiah(TARGET_WAKAF - totalWakaf)}</span>
+          </div>
+        </div>
+
+        {/* Qurban Summary */}
+        {qurbanTotal > 0 ? (
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#EDE5D8]">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                <Beef className="w-4 h-4 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-gray-800">Program Qurban</p>
+                <p className="text-xs text-gray-400">Tahun ini</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-orange-50 rounded-xl p-4 text-center">
+                <p className="text-3xl font-bold text-orange-600">{qurbanSapi}</p>
+                <p className="text-xs text-gray-500 mt-1">🐄 Sapi</p>
+              </div>
+              <div className="bg-amber-50 rounded-xl p-4 text-center">
+                <p className="text-3xl font-bold text-amber-600">{qurbanKambing}</p>
+                <p className="text-xs text-gray-500 mt-1">🐐 Kambing</p>
+              </div>
             </div>
           </div>
-
-          <div className="grid grid-cols-3 gap-4 pt-2 border-t border-gray-100">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">
-                {progressWakaf.toFixed(0)}%
-              </p>
-              <p className="text-xs text-gray-500 mt-1">Progres</p>
-            </div>
-            <div className="text-center border-x border-gray-100">
-              <p className="text-2xl font-bold text-gray-700">
-                {(totalWakaf / 1_000_000_000).toFixed(3)}
-                <span className="text-base font-normal"> M</span>
-              </p>
-              <p className="text-xs text-gray-500 mt-1">Terkumpul</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-amber-600">
-                {((TARGET_WAKAF - totalWakaf) / 1_000_000_000).toFixed(3)}
-                <span className="text-base font-normal"> M</span>
-              </p>
-              <p className="text-xs text-gray-500 mt-1">Perlu Dicapai</p>
-            </div>
+        ) : (
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#EDE5D8] flex items-center justify-center">
+            <p className="text-sm text-gray-400">Belum ada data qurban</p>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Transaksi Terkini & Ringkasan */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <RecentTransaksi />
-        <RingkasanBulan totalMasuk={totalMasuk} totalKeluar={totalKeluar} saldo={saldoBank} />
+        )}
       </div>
+
+      {/* ── Selisih Bulan + Chart ─────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        {/* Ringkasan Bulan */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#EDE5D8] space-y-3">
+          <p className="text-sm font-bold text-gray-800">Ringkasan {bulanNama}</p>
+          <div className="flex justify-between items-center p-3 bg-green-50 rounded-xl">
+            <div className="flex items-center gap-2">
+              <ArrowUpRight className="w-4 h-4 text-green-600" />
+              <span className="text-sm text-gray-600">Pemasukan</span>
+            </div>
+            <span className="font-semibold text-green-700 text-sm">{formatRupiah(totalMasuk)}</span>
+          </div>
+          <div className="flex justify-between items-center p-3 bg-red-50 rounded-xl">
+            <div className="flex items-center gap-2">
+              <ArrowDownRight className="w-4 h-4 text-red-500" />
+              <span className="text-sm text-gray-600">Pengeluaran</span>
+            </div>
+            <span className="font-semibold text-red-600 text-sm">{formatRupiah(totalKeluar)}</span>
+          </div>
+          <div className={`flex justify-between items-center p-3 rounded-xl ${selisih >= 0 ? 'bg-blue-50' : 'bg-orange-50'}`}>
+            <span className="text-sm text-gray-600">Selisih</span>
+            <span className={`font-bold text-sm ${selisih >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+              {selisih >= 0 ? '+' : ''}{formatRupiah(selisih)}
+            </span>
+          </div>
+        </div>
+
+        {/* Sumber Pemasukan */}
+        <div className="lg:col-span-2">
+          <SumberPemasukanChart />
+        </div>
+      </div>
+
+      {/* ── Transaksi Terkini ─────────────────────────────────────── */}
+      <RecentTransaksi />
     </div>
   )
 }
@@ -259,117 +258,52 @@ async function RecentTransaksi() {
     .from('transaksi')
     .select('*')
     .order('tanggal', { ascending: false })
-    .limit(6)
+    .limit(8)
 
   return (
-    <Card className="border-0 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-base text-gray-800">Transaksi Terkini</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {data?.map((t) => (
-            <div
-              key={t.id}
-              className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`p-1.5 rounded-full ${
-                    t.jenis === 'masuk' ? 'bg-green-100' : 'bg-red-100'
-                  }`}
-                >
-                  {t.jenis === 'masuk' ? (
-                    <ArrowUpRight className="w-4 h-4 text-green-600" />
-                  ) : (
-                    <ArrowDownRight className="w-4 h-4 text-red-600" />
+    <div className="bg-white rounded-2xl shadow-sm border border-[#EDE5D8] overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-100">
+        <p className="text-sm font-bold text-gray-800">Transaksi Terkini</p>
+      </div>
+      <div className="divide-y divide-gray-50">
+        {data?.map((t) => (
+          <div key={t.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50/60 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                t.jenis === 'masuk' ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                {t.jenis === 'masuk'
+                  ? <ArrowUpRight className="w-4 h-4 text-green-600" />
+                  : <ArrowDownRight className="w-4 h-4 text-red-500" />}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-800 line-clamp-1">{t.uraian}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-xs text-gray-400">
+                    {new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(t.tanggal))}
+                  </span>
+                  {t.kategori && (
+                    <>
+                      <span className="text-gray-300">·</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-[#F0EAE0] text-[#6A5A45] font-medium">
+                        {t.kategori}
+                      </span>
+                    </>
                   )}
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-800 line-clamp-1">{t.uraian}</p>
-                  <p className="text-xs text-gray-400">
-                    {new Intl.DateTimeFormat('id-ID', {
-                      day: 'numeric',
-                      month: 'short',
-                    }).format(new Date(t.tanggal))}
-                    {' · '}
-                    {t.kategori}
-                  </p>
-                </div>
               </div>
-              <p
-                className={`text-sm font-semibold ${
-                  t.jenis === 'masuk' ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {t.jenis === 'masuk' ? '+' : '-'}
-                {formatRupiah(t.jumlah)}
-              </p>
             </div>
-          ))}
-          {(!data || data.length === 0) && (
-            <p className="text-sm text-gray-400 text-center py-4">Belum ada transaksi</p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function RingkasanBulan({
-  totalMasuk,
-  totalKeluar,
-  saldo,
-}: {
-  totalMasuk: number
-  totalKeluar: number
-  saldo: number
-}) {
-  const selisih = totalMasuk - totalKeluar
-
-  return (
-    <Card className="border-0 shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-base text-gray-800">Ringkasan Bulan Ini</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-3">
-          <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <ArrowUpRight className="w-4 h-4 text-green-600" />
-              <span className="text-sm text-gray-600">Total Pemasukan</span>
-            </div>
-            <span className="font-semibold text-green-600">{formatRupiah(totalMasuk)}</span>
+            <p className={`text-sm font-semibold shrink-0 ml-3 ${
+              t.jenis === 'masuk' ? 'text-green-600' : 'text-red-500'
+            }`}>
+              {t.jenis === 'masuk' ? '+' : '-'}{formatRupiah(t.jumlah)}
+            </p>
           </div>
-
-          <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <ArrowDownRight className="w-4 h-4 text-red-600" />
-              <span className="text-sm text-gray-600">Total Pengeluaran</span>
-            </div>
-            <span className="font-semibold text-red-600">{formatRupiah(totalKeluar)}</span>
-          </div>
-
-          <div
-            className={`flex justify-between items-center p-3 rounded-lg ${
-              selisih >= 0 ? 'bg-blue-50' : 'bg-orange-50'
-            }`}
-          >
-            <span className="text-sm text-gray-600">Selisih Bulan Ini</span>
-            <span className={`font-bold ${selisih >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-              {selisih >= 0 ? '+' : ''}
-              {formatRupiah(selisih)}
-            </span>
-          </div>
-        </div>
-
-        <div className="pt-2 border-t border-gray-100">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-600">Saldo Bank Saat Ini</span>
-            <span className="text-lg font-bold text-green-700">{formatRupiah(saldo)}</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        ))}
+        {(!data || data.length === 0) && (
+          <p className="text-sm text-gray-400 text-center py-8">Belum ada transaksi</p>
+        )}
+      </div>
+    </div>
   )
 }

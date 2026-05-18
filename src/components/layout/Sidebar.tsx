@@ -24,7 +24,6 @@ function LogoSection({ collapsed }: { collapsed: boolean }) {
   const [logoSrc, setLogoSrc] = useState<string | null>(null)
   const [hovering, setHovering] = useState(false)
 
-  // Load logo dari localStorage saat pertama render
   useEffect(() => {
     const saved = localStorage.getItem(LOGO_KEY)
     if (saved) setLogoSrc(saved)
@@ -37,22 +36,21 @@ function LogoSection({ collapsed }: { collapsed: boolean }) {
     reader.onload = ev => {
       const result = ev.target?.result as string
       setLogoSrc(result)
-      localStorage.setItem(LOGO_KEY, result) // simpan permanen
+      localStorage.setItem(LOGO_KEY, result)
     }
     reader.readAsDataURL(file)
   }
 
   return (
-    <div className={cn('border-b border-green-700 overflow-hidden', collapsed ? 'px-3 py-4' : 'p-6')}>
+    <div className={cn('border-b border-[#1E3A28] overflow-hidden', collapsed ? 'px-3 py-4' : 'p-5')}>
       <div className="flex items-center gap-3">
-        {/* Logo circle — klik untuk upload */}
         <label
           className="relative shrink-0 cursor-pointer"
           onMouseEnter={() => setHovering(true)}
           onMouseLeave={() => setHovering(false)}
           title="Klik untuk ganti logo"
         >
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-green-700 flex items-center justify-center p-1">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-[#1E3A28] flex items-center justify-center p-1 ring-2 ring-[#2D6A4F]/40">
             <Image
               src={logoSrc ?? '/logo.png'}
               alt="Logo"
@@ -61,7 +59,6 @@ function LogoSection({ collapsed }: { collapsed: boolean }) {
               className="w-full h-full object-contain"
             />
           </div>
-          {/* Overlay saat hover */}
           {hovering && (
             <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
               <Camera className="w-4 h-4 text-white" />
@@ -77,13 +74,13 @@ function LogoSection({ collapsed }: { collapsed: boolean }) {
 
         {!collapsed && (
           <div className="overflow-hidden">
-            <p className="font-bold text-sm leading-tight whitespace-nowrap">Masjid</p>
-            <p className="font-bold text-base leading-tight whitespace-nowrap">Pogung Raya</p>
+            <p className="font-bold text-sm leading-tight whitespace-nowrap text-white">Masjid</p>
+            <p className="font-bold text-base leading-tight whitespace-nowrap text-white">Pogung Raya</p>
           </div>
         )}
       </div>
       {!collapsed && (
-        <p className="text-green-300 text-xs mt-2">Sistem Keuangan Masjid</p>
+        <p className="text-[#6AAF88] text-xs mt-2">Sistem Keuangan Masjid</p>
       )}
     </div>
   )
@@ -106,7 +103,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   return (
     <aside
       className={cn(
-        'relative h-screen bg-green-900 text-white flex flex-col transition-all duration-300 overflow-y-auto',
+        'relative h-screen flex flex-col transition-all duration-300 overflow-y-auto',
+        'bg-[#0D2117] text-white',
         collapsed ? 'w-16' : 'w-64'
       )}
     >
@@ -114,7 +112,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       {onClose && (
         <button
           onClick={onClose}
-          className="lg:hidden absolute top-3 right-3 z-10 p-1.5 rounded-lg text-green-300 hover:text-white hover:bg-green-800 transition-colors"
+          className="lg:hidden absolute top-3 right-3 z-10 p-1.5 rounded-lg text-[#6AAF88] hover:text-white hover:bg-[#1E3A28] transition-colors"
           title="Tutup menu"
         >
           <X className="w-5 h-5" />
@@ -124,7 +122,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       <LogoSection collapsed={collapsed} />
 
       {/* Nav */}
-      <nav className="flex-1 p-2 space-y-1">
+      <nav className="flex-1 p-2 space-y-0.5 mt-1">
         {navItems.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
@@ -132,31 +130,31 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             onClick={onClose}
             title={collapsed ? label : undefined}
             className={cn(
-              'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors',
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
               collapsed ? 'justify-center' : '',
               pathname === href
-                ? 'bg-green-600 text-white'
-                : 'text-green-200 hover:bg-green-800 hover:text-white'
+                ? 'bg-[#2D6A4F] text-white shadow-sm'
+                : 'text-[#A8C5B5] hover:bg-[#1E3A28] hover:text-white'
             )}
           >
-            <Icon className="w-5 h-5 shrink-0" />
+            <Icon className="w-4.5 h-4.5 w-[18px] h-[18px] shrink-0" />
             {!collapsed && <span className="whitespace-nowrap">{label}</span>}
           </Link>
         ))}
       </nav>
 
       {/* Logout */}
-      <div className="px-2 pb-1 border-t border-green-700 pt-2">
+      <div className="px-2 pb-1 border-t border-[#1E3A28] pt-2">
         <button
           onClick={handleLogout}
           disabled={loggingOut}
           title={collapsed ? 'Keluar' : undefined}
           className={cn(
-            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-green-300 hover:bg-red-800/40 hover:text-red-200',
+            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-[#A8C5B5] hover:bg-red-900/30 hover:text-red-300',
             collapsed ? 'justify-center' : ''
           )}
         >
-          <LogOut className="w-4 h-4 shrink-0" />
+          <LogOut className="w-[18px] h-[18px] shrink-0" />
           {!collapsed && <span>{loggingOut ? 'Keluar...' : 'Keluar'}</span>}
         </button>
       </div>
@@ -164,14 +162,14 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       {/* Footer */}
       {!collapsed && (
         <div className="px-4 pb-2 pt-1">
-          <p className="text-green-400 text-xs text-center">© 2025 Masjid Pogung Raya</p>
+          <p className="text-[#4A7A5E] text-xs text-center">© 2025 Masjid Pogung Raya</p>
         </div>
       )}
 
       {/* Collapse toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-center w-full py-3 border-t border-green-700 text-green-300 hover:text-white hover:bg-green-800 transition-colors"
+        className="flex items-center justify-center w-full py-3 border-t border-[#1E3A28] text-[#6AAF88] hover:text-white hover:bg-[#1E3A28] transition-colors"
         title={collapsed ? 'Buka sidebar' : 'Tutup sidebar'}
       >
         {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
