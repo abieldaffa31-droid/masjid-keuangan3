@@ -98,7 +98,7 @@ export default async function TransaksiPage({ searchParams }: PageProps) {
         <CardHeader>
           <CardTitle className="text-base">Daftar Transaksi</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50">

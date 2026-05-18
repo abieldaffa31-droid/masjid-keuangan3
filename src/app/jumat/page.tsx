@@ -136,7 +136,7 @@ export default async function JumatPage() {
         <CardHeader>
           <CardTitle className="text-base">Rekap Per Pekan</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50">

@@ -74,7 +74,7 @@ function LogoSection({ collapsed }: { collapsed: boolean }) {
   )
 }
 
-export function Sidebar() {
+export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
@@ -91,7 +91,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'relative min-h-screen bg-green-900 text-white flex flex-col transition-all duration-300',
+        'relative h-full min-h-screen bg-green-900 text-white flex flex-col transition-all duration-300',
         collapsed ? 'w-16' : 'w-64'
       )}
     >
@@ -103,6 +103,7 @@ export function Sidebar() {
           <Link
             key={href}
             href={href}
+            onClick={onClose}
             title={collapsed ? label : undefined}
             className={cn(
               'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors',
