@@ -21,7 +21,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      setError('Email atau password salah. Silakan coba lagi.')
+      setError(error.message)
       setLoading(false)
       return
     }
