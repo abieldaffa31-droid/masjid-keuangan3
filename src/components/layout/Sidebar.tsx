@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { LayoutDashboard, ArrowLeftRight, Heart, BookOpen, Upload, ChevronLeft, ChevronRight, Beef, LogOut, Camera } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
-import { createBrowserSupabase } from '@/lib/supabase-browser'
+import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
 
 const navItems = [
@@ -82,7 +82,6 @@ export function Sidebar() {
 
   async function handleLogout() {
     setLoggingOut(true)
-    const supabase = createBrowserSupabase()
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
