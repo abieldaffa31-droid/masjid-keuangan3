@@ -10,9 +10,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase'
 import { Plus } from 'lucide-react'
-import { getTipeOptions, getTipe, HARGA_KAMBING } from './config'
+import { getTipe, HARGA_KAMBING, HARGA_SAPI } from './config'
 
 const STATUS_OPTIONS = ['Lunas', 'DP', 'Belum Bayar']
+const SAPI_TIPE_LIST = HARGA_SAPI.map(h => h.tipe) as ('Diamond' | 'Platinum' | 'Gold' | 'Ekonomis')[]
 
 function fmtRp(n: number) { return 'Rp ' + n.toLocaleString('id-ID') }
 
@@ -20,24 +21,33 @@ function fmtRp(n: number) { return 'Rp ' + n.toLocaleString('id-ID') }
 function SapiForm({ onClose }: { onClose: () => void }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [tipe, setTipe] = useState<'Diamond' | 'Platinum' | 'Gold'>('Diamond')
+  const [tipe, setTipe] = useState<typeof SAPI_TIPE_LIST[number]>('Diamond')
+  const [mode, setMode] = useState<'1/7' | '1_ekor'>('1/7')
   const [grup, setGrup] = useState('')
   const [namaPemilik, setNamaPemilik] = useState('')
   const [status, setStatus] = useState('Lunas')
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])
 
-  const _tipeOptions = getTipeOptions('Sapi')
   const selectedTipe = getTipe('Sapi', tipe)
+  const harga = mode === '1_ekor'
+    ? (selectedTipe?.harga_ekor ?? 0)
+    : (selectedTipe?.harga_per_orang ?? 0)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     try {
       const { error } = await supabase.from('hewan_qurban').insert({
-        jenis_hewan: 'Sapi', tipe, grup: grup || null,
+        jenis_hewan: 'Sapi',
+        tipe,
+        grup: mode === '1_ekor' ? null : (grup || null),
         nama_pemilik: namaPemilik || null,
-        harga: selectedTipe?.harga_per_orang ?? 0,
-        include_sembelih: true, status, tanggal, jumlah: 1,
+        harga,
+        include_sembelih: true,
+        status,
+        tanggal,
+        jumlah: 1,
+        keterangan: mode === '1_ekor' ? '1_ekor_penuh' : null,
       })
       if (error) throw error
       onClose(); router.refresh()
@@ -46,30 +56,53 @@ function SapiForm({ onClose }: { onClose: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Tipe */}
       <div className="space-y-1">
         <Label>Tipe</Label>
-        <div className="flex gap-2">
-          {(['Diamond', 'Platinum', 'Gold'] as const).map(t => (
+        <div className="grid grid-cols-2 gap-2">
+          {SAPI_TIPE_LIST.map(t => (
             <button key={t} type="button" onClick={() => setTipe(t)}
-              className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${tipe === t ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-orange-50'}`}>
+              className={`py-2 rounded-lg border text-sm font-medium transition-colors ${tipe === t ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-orange-50'}`}>
               {t}
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Mode: 1/7 atau 1 ekor penuh */}
+      <div className="space-y-1">
+        <Label>Jenis Pembelian</Label>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => setMode('1/7')}
+            className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${mode === '1/7' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50'}`}>
+            1/7 Bagian
+          </button>
+          <button type="button" onClick={() => setMode('1_ekor')}
+            className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${mode === '1_ekor' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50'}`}>
+            1 Ekor Penuh
+          </button>
+        </div>
         {selectedTipe && (
           <p className="text-xs text-orange-600 bg-orange-50 rounded px-2 py-1 mt-1">
-            {fmtRp(selectedTipe.harga_ekor)}/ekor · {selectedTipe.harga_per_orang ? fmtRp(selectedTipe.harga_per_orang) + '/orang (1/7)' : ''}
+            Harga: <strong>{fmtRp(harga)}</strong>
+            {mode === '1/7' ? ' (1/7 bagian)' : ' (1 ekor penuh)'}
           </p>
         )}
       </div>
+
+      {/* Grup — hanya untuk 1/7 */}
+      {mode === '1/7' && (
+        <div className="space-y-1">
+          <Label>Grup Sapi (contoh: Diamond 04)</Label>
+          <Input placeholder="Diamond 04" value={grup} onChange={e => setGrup(e.target.value)} />
+        </div>
+      )}
+
       <div className="space-y-1">
-        <Label>Grup Sapi (contoh: Diamond 04)</Label>
-        <Input placeholder="Diamond 04" value={grup} onChange={e => setGrup(e.target.value)} />
+        <Label>{mode === '1_ekor' ? 'Nama / Keluarga Shohibul Qurban' : 'Nama Shohibul Qurban'}</Label>
+        <Input placeholder={mode === '1_ekor' ? 'Kel. Ahmad' : 'Bp. Budi'} value={namaPemilik} onChange={e => setNamaPemilik(e.target.value)} required />
       </div>
-      <div className="space-y-1">
-        <Label>Nama Shohibul Qurban</Label>
-        <Input placeholder="Kel. Ahmad / Bp. Budi" value={namaPemilik} onChange={e => setNamaPemilik(e.target.value)} required />
-      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label>Status</Label>
@@ -93,12 +126,15 @@ function SapiForm({ onClose }: { onClose: () => void }) {
   )
 }
 
-// ── Form Kambing (input jumlah per tipe) ──────────────────────────────────────
-function KambingForm({ onClose }: { onClose: () => void }) {
+// ── Form Kambing ──────────────────────────────────────────────────────────────
+export function KambingForm({ onClose, initialCounts }: {
+  onClose: () => void
+  initialCounts?: Record<string, number>
+}) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [counts, setCounts] = useState<Record<string, string>>(
-    Object.fromEntries(HARGA_KAMBING.map(o => [o.tipe, '']))
+    Object.fromEntries(HARGA_KAMBING.map(o => [o.tipe, String(initialCounts?.[o.tipe] ?? '')]))
   )
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0])
 
@@ -106,9 +142,7 @@ function KambingForm({ onClose }: { onClose: () => void }) {
     e.preventDefault()
     setLoading(true)
     try {
-      // Hapus data kambing lama lalu insert ulang dengan jumlah baru
       await supabase.from('hewan_qurban').delete().eq('jenis_hewan', 'Kambing')
-
       const rows = HARGA_KAMBING.flatMap(opt => {
         const n = parseInt(counts[opt.tipe] || '0') || 0
         if (n <= 0) return []
@@ -116,7 +150,6 @@ function KambingForm({ onClose }: { onClose: () => void }) {
           nama_pemilik: null, harga: opt.harga_ekor, include_sembelih: false,
           status: 'Lunas', tanggal, jumlah: n }]
       })
-
       if (rows.length > 0) {
         const { error } = await supabase.from('hewan_qurban').insert(rows)
         if (error) throw error
@@ -129,7 +162,7 @@ function KambingForm({ onClose }: { onClose: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-xs text-gray-500">Masukkan jumlah ekor per tipe. Data lama akan diganti.</p>
+      <p className="text-xs text-gray-500">Masukkan jumlah ekor per tipe. Data kambing lama akan diganti.</p>
       <div className="space-y-2">
         {HARGA_KAMBING.map(opt => (
           <div key={opt.tipe} className="flex items-center gap-3">
@@ -138,12 +171,10 @@ function KambingForm({ onClose }: { onClose: () => void }) {
               <p className="text-xs text-gray-400">{opt.berat_kg} kg · {fmtRp(opt.harga_ekor)}</p>
             </div>
             <div className="flex items-center gap-1.5">
-              <Input
-                type="number" min="0" placeholder="0"
+              <Input type="number" min="0" placeholder="0"
                 value={counts[opt.tipe]}
                 onChange={e => setCounts(p => ({ ...p, [opt.tipe]: e.target.value }))}
-                className="w-20 text-center"
-              />
+                className="w-20 text-center" />
               <span className="text-xs text-gray-400">ekor</span>
             </div>
           </div>

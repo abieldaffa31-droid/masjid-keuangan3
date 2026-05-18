@@ -33,6 +33,13 @@ export const HARGA_SAPI: TipeOption[] = [
     harga_per_orang: 3_500_000,
     biaya_sembelih: 0,
   },
+  {
+    tipe: 'Ekonomis',
+    label: 'Tipe D – Ekonomis',
+    harga_ekor: 21_000_000,
+    harga_per_orang: 3_000_000,
+    biaya_sembelih: 0,
+  },
 ]
 
 export const HARGA_KAMBING: TipeOption[] = [

@@ -25,9 +25,7 @@ async function getDashboardData() {
     await Promise.all([
       supabase
         .from('transaksi')
-        .select('saldo')
-        .order('id', { ascending: false })
-        .limit(1),
+        .select('jenis, jumlah, kategori'),
       supabase
         .from('transaksi')
         .select('jenis, jumlah')
@@ -44,7 +42,12 @@ async function getDashboardData() {
         .select('jenis_hewan, grup, harga, status, jumlah'),
     ])
 
-  const saldoBank = transaksiResult.data?.[0]?.saldo ?? 0
+  // Saldo operasional = semua masuk (non-wakaf) - semua keluar
+  const saldoBank = (transaksiResult.data ?? []).reduce((s, t) => {
+    if (t.jenis === 'masuk' && !/wakaf/i.test(t.kategori ?? '')) return s + t.jumlah
+    if (t.jenis === 'keluar') return s - t.jumlah
+    return s
+  }, 0)
 
   let totalMasuk = 0
   let totalKeluar = 0
