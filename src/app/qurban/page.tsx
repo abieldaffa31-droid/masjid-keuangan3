@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { Wallet, CheckCircle } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
 import { TambahQurbanDialog } from './TambahQurbanDialog'
 import { HapusQurbanButton } from './HapusQurbanButton'
 import { EditKambingButton } from './EditKambingButton'
@@ -342,19 +342,6 @@ export default async function QurbanPage() {
         </CardContent>
       </Card>
 
-      {/* ── Total Dana ──────────────────────────────────────────────────── */}
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-5 flex items-center gap-3">
-          <div className="p-2.5 bg-green-50 rounded-xl">
-            <Wallet className="w-5 h-5 text-green-600" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Total Dana Terkumpul</p>
-            <p className="text-2xl font-bold text-green-600">{formatRupiah(totalHarga)}</p>
-            <p className="text-xs text-gray-400">dari {list.length} peserta · {list.filter(r => r.status === 'Lunas').length} lunas</p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

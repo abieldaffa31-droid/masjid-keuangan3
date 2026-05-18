@@ -2,32 +2,19 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { supabase } from '@/lib/supabase'
 import { formatRupiah } from '@/lib/format'
 import { PrintButton } from './PrintButton'
+import { DateRangePicker } from './DateRangePicker'
 
 export const dynamic = 'force-dynamic'
 
 const TARGET_WAKAF = 2_500_000_000
 const CURRENT_WAKAF_DEFAULT = 1_447_439_609
 
-function addDays(dateStr: string, days: number) {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const date = new Date(y, m - 1, d + days)
-  return [date.getFullYear(), String(date.getMonth()+1).padStart(2,'0'), String(date.getDate()).padStart(2,'0')].join('-')
-}
-
-async function getData() {
+async function getData(dari: string, sampai: string) {
   noStore()
   const now = new Date()
   const bulanIni = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
   const [thn, bln] = bulanIni.split('-').map(Number)
   const lastDay = new Date(thn, bln, 0).getDate()
-
-  // Hari Jumat terakhir (atau Senin awal pekan ini)
-  const dayOfWeek = now.getDay() // 0=Minggu, 5=Jumat
-  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-  const startOfWeek = new Date(now)
-  startOfWeek.setDate(now.getDate() - daysToMonday)
-  const weekStart = `${startOfWeek.getFullYear()}-${String(startOfWeek.getMonth()+1).padStart(2,'0')}-${String(startOfWeek.getDate()).padStart(2,'0')}`
-  const weekEnd   = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
 
   const [wakafRes, transBulanRes, transPerkanRes, jumatRes, qurbanRes] = await Promise.all([
     supabase.from('wakaf').select('jumlah'),
@@ -35,13 +22,13 @@ async function getData() {
       .gte('tanggal', `${bulanIni}-01`)
       .lte('tanggal', `${bulanIni}-${String(lastDay).padStart(2,'0')}`),
     supabase.from('transaksi').select('jenis, jumlah, kategori')
-      .gte('tanggal', weekStart)
-      .lte('tanggal', weekEnd)
+      .gte('tanggal', dari)
+      .lte('tanggal', sampai)
       .eq('jenis', 'keluar'),
     supabase.from('infaq_jumat').select('tanggal_jumat, jumlah_kotak')
       .gte('tanggal_jumat', `${bulanIni}-01`)
       .lte('tanggal_jumat', `${bulanIni}-${String(lastDay).padStart(2,'0')}`),
-    supabase.from('hewan_qurban').select('jenis_hewan, grup, harga, status, keterangan'),
+    supabase.from('hewan_qurban').select('jenis_hewan, grup, harga, status, keterangan, jumlah'),
   ])
 
   // Wakaf
@@ -56,24 +43,19 @@ async function getData() {
     else pengeluaranBulan += t.jumlah
   })
 
-  // Infaq Jumat bulan ini (kotak saja, online terpisah)
+  // Infaq Jumat bulan ini
   const infaqJumatBulan = jumatRes.data?.reduce((s, j) => s + j.jumlah_kotak, 0) ?? 0
 
-  // Infaq online bulan ini dari transaksi
-  const infaqOnlineBulan = (transBulanRes.data ?? [])
-    .filter(t => t.jenis === 'masuk' && !/wakaf/i.test(t.kategori ?? '') && /infaq|jumat|online/i.test(t.kategori ?? ''))
-    .reduce((s, t) => s + t.jumlah, 0)
-
-  // Pengeluaran pekan ini by kategori
+  // Pengeluaran periode custom by kategori
   const keluarPerKategori: Record<string, number> = {}
   transPerkanRes.data?.forEach(t => {
     const k = t.kategori || 'Lainnya'
     keluarPerKategori[k] = (keluarPerKategori[k] ?? 0) + t.jumlah
   })
-  const totalKeluarPerkan = Object.values(keluarPerKategori).reduce((s, n) => s + n, 0)
+  const totalKeluarPeriode = Object.values(keluarPerKategori).reduce((s, n) => s + n, 0)
   const keluarSorted = Object.entries(keluarPerKategori).sort((a, b) => b[1] - a[1])
 
-  // Qurban
+  // Qurban — fix kambing count pakai kolom jumlah
   const qurbanList = qurbanRes.data ?? []
   const sapiList = qurbanList.filter(r => r.jenis_hewan === 'Sapi')
   const sapiGrupCount: Record<string, number> = {}
@@ -83,24 +65,23 @@ async function getData() {
   }
   const jumlahSapi = Object.values(sapiGrupCount).filter(n => n === 7).length
     + sapiList.filter(r => r.keterangan === '1_ekor_penuh').length
-  const jumlahKambing = qurbanList.filter(r => r.jenis_hewan === 'Kambing')
+  const jumlahKambing = qurbanList
+    .filter(r => r.jenis_hewan === 'Kambing')
     .reduce((s, r) => s + ((r as { jumlah?: number }).jumlah ?? 1), 0)
-  const totalDanaQurban = qurbanList.reduce((s, r) => s + (r.harga ?? 0), 0)
   const lunas = qurbanList.filter(r => r.status === 'Lunas').length
+  const totalPeserta = qurbanList.filter(r => r.jenis_hewan === 'Sapi').length
 
   const tanggalUpdate = new Intl.DateTimeFormat('id-ID', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   }).format(now)
-
   const namaBulan = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(now)
 
   return {
     totalWakaf, progressWakaf,
-    pemasukanBulan, pengeluaranBulan,
-    infaqJumatBulan, infaqOnlineBulan,
-    keluarSorted, totalKeluarPerkan,
-    jumlahSapi, jumlahKambing, totalDanaQurban, lunas, totalPeserta: qurbanList.length,
-    tanggalUpdate, namaBulan, weekStart, weekEnd,
+    pemasukanBulan, pengeluaranBulan, infaqJumatBulan,
+    keluarSorted, totalKeluarPeriode,
+    jumlahSapi, jumlahKambing, lunas, totalPeserta,
+    tanggalUpdate, namaBulan,
   }
 }
 
@@ -113,16 +94,27 @@ const KATEGORI_COLOR: Record<string, string> = {
   'Donasi': 'bg-teal-500',
   'Umum': 'bg-gray-400',
 }
-function getColor(k: string) {
-  return KATEGORI_COLOR[k] ?? 'bg-slate-400'
+function getColor(k: string) { return KATEGORI_COLOR[k] ?? 'bg-slate-400' }
+
+interface PageProps {
+  searchParams: { dari?: string; sampai?: string }
 }
 
-export default async function JamaahPage() {
-  const d = await getData()
+export default async function JamaahPage({ searchParams }: PageProps) {
+  const now = new Date()
+  // Default: awal bulan s/d hari ini
+  const defaultDari = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`
+  const defaultSampai = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+
+  const dari = searchParams.dari ?? defaultDari
+  const sampai = searchParams.sampai ?? defaultSampai
+
+  const d = await getData(dari, sampai)
+
+  const fmtTgl = (s: string) => new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(s))
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Wrapper konten — lebar tetap buat screenshot */}
       <div className="max-w-4xl mx-auto p-6 space-y-5">
 
         {/* Header */}
@@ -176,10 +168,9 @@ export default async function JamaahPage() {
               <p className="text-lg font-semibold text-gray-600">{formatRupiah(TARGET_WAKAF)}</p>
             </div>
           </div>
-          {/* Progress bar */}
           <div className="w-full bg-green-100 rounded-full h-5 overflow-hidden">
             <div
-              className="h-5 bg-green-500 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
+              className="h-5 bg-green-500 rounded-full flex items-center justify-end pr-2"
               style={{ width: `${d.progressWakaf}%` }}
             >
               <span className="text-white text-xs font-bold">{d.progressWakaf.toFixed(1)}%</span>
@@ -191,23 +182,22 @@ export default async function JamaahPage() {
           </div>
         </div>
 
-        {/* Pengeluaran pekan ini & Qurban */}
+        {/* Pengeluaran custom & Qurban */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-          {/* Pengeluaran per kategori pekan ini */}
+          {/* Pengeluaran per kategori — custom date */}
           <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <h2 className="font-bold text-gray-800 mb-1">📊 Pengeluaran Pekan Ini</h2>
-            <p className="text-xs text-gray-400 mb-4">
-              {new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(d.weekStart))} –{' '}
-              {new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(d.weekEnd))}
-              {' · '}Total: {formatRupiah(d.totalKeluarPerkan)}
+            <h2 className="font-bold text-gray-800 mb-2">📊 Pengeluaran per Kategori</h2>
+            <DateRangePicker dari={dari} sampai={sampai} />
+            <p className="text-xs text-gray-400 mt-2 mb-4">
+              {fmtTgl(dari)} – {fmtTgl(sampai)} · Total: <strong>{formatRupiah(d.totalKeluarPeriode)}</strong>
             </p>
             {d.keluarSorted.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">Belum ada pengeluaran pekan ini</p>
+              <p className="text-sm text-gray-400 text-center py-6">Belum ada pengeluaran periode ini</p>
             ) : (
               <div className="space-y-2.5">
                 {d.keluarSorted.map(([kat, jumlah]) => {
-                  const pct = d.totalKeluarPerkan > 0 ? (jumlah / d.totalKeluarPerkan) * 100 : 0
+                  const pct = d.totalKeluarPeriode > 0 ? (jumlah / d.totalKeluarPeriode) * 100 : 0
                   return (
                     <div key={kat}>
                       <div className="flex justify-between text-sm mb-1">
@@ -239,22 +229,17 @@ export default async function JamaahPage() {
             </div>
             <div className="border-t border-gray-100 pt-3 space-y-1.5">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Total peserta</span>
+                <span className="text-gray-500">Total peserta sapi</span>
                 <span className="font-semibold">{d.totalPeserta} orang</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Sudah lunas</span>
                 <span className="font-semibold text-green-600">{d.lunas} orang</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Total dana</span>
-                <span className="font-semibold text-orange-600">{formatRupiah(d.totalDanaQurban)}</span>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-gray-400 text-xs pb-2">
           © 2025 Masjid Pogung Raya — Data diperbarui otomatis
         </p>
