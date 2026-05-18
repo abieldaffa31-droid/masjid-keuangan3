@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Start-Sleep -Seconds 5)",
+      "Bash(Get-Content \"C:\\\\Users\\\\abiel\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-abiel-OneDrive-Desktop-masjid-keuangan\\\\95a89aab-7213-4cf9-9822-4ec3e1fc347c\\\\tasks\\\\b39hflk4w.output\")"
+    ]
+  }
+}

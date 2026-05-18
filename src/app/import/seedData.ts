@@ -1,0 +1,31 @@
+export const SALDO_AWAL = {
+  tanggal: '2026-01-09',
+  uraian: 'Saldo Awal Rekening BSI',
+  kategori: 'Umum',
+  jenis: 'masuk' as const,
+  jumlah: 71_880_608,
+  saldo: 71_880_608,
+}
+
+export const INFAQ_JUMAT_DATA = [
+  { tanggal_jumat: '2026-01-02', jumlah_kotak: 2_201_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-01-09', jumlah_kotak: 2_205_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-01-16', jumlah_kotak: 2_406_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-01-23', jumlah_kotak: 2_104_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-01-30', jumlah_kotak: 2_815_800, jumlah_online: 0 },
+  { tanggal_jumat: '2026-02-06', jumlah_kotak: 2_457_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-02-13', jumlah_kotak: 2_611_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-02-20', jumlah_kotak: 1_536_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-02-27', jumlah_kotak: 1_904_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-03-06', jumlah_kotak: 1_608_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-03-13', jumlah_kotak: 1_699_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-03-20', jumlah_kotak: 3_253_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-03-27', jumlah_kotak: 2_620_300, jumlah_online: 0 },
+  { tanggal_jumat: '2026-04-03', jumlah_kotak: 3_533_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-04-10', jumlah_kotak: 2_696_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-04-17', jumlah_kotak: 3_338_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-04-24', jumlah_kotak: 3_228_100, jumlah_online: 0 },
+  { tanggal_jumat: '2026-05-01', jumlah_kotak: 3_352_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-05-08', jumlah_kotak: 2_874_000, jumlah_online: 0 },
+  { tanggal_jumat: '2026-05-15', jumlah_kotak: 3_160_000, jumlah_online: 0 },
+]
