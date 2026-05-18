@@ -44,7 +44,8 @@ async function getDashboardData() {
         .select('jenis_hewan, grup, harga, status, jumlah'),
     ])
 
-  const saldoTotal = transaksiResult.data?.[0]?.saldo ?? 0
+  // Saldo bank = saldo terakhir di transaksi (sudah operasional, wakaf dicatat terpisah)
+  const saldoBank = transaksiResult.data?.[0]?.saldo ?? 0
 
   let totalMasuk = 0
   let totalKeluar = 0
@@ -55,9 +56,6 @@ async function getDashboardData() {
 
   const totalWakafDB = wakafResult.data?.reduce((sum, w) => sum + w.jumlah, 0) ?? 0
   const totalWakaf = totalWakafDB || CURRENT_WAKAF_DEFAULT
-
-  // Saldo operasional = saldo bank total - dana wakaf terkumpul
-  const saldoBank = saldoTotal - totalWakaf
 
   const totalJumatBulanIni =
     jumatResult.data?.reduce((sum, j) => sum + (j.total ?? 0), 0) ?? 0
