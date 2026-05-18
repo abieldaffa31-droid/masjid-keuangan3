@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, ArrowLeftRight, Heart, BookOpen, Upload, ChevronLeft, ChevronRight, Beef, LogOut, Camera, X } from 'lucide-react'
+import { LayoutDashboard, ArrowLeftRight, Heart, BookOpen, Upload, ChevronLeft, ChevronRight, Beef, LogOut, Camera, X, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { createBrowserSupabase } from '@/lib/supabase-browser'
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/wakaf', label: 'Wakaf', icon: Heart },
   { href: '/qurban', label: 'Qurban', icon: Beef },
   { href: '/jumat', label: 'Infaq Jumat', icon: BookOpen },
+  { href: '/jamaah', label: 'Info Jamaah', icon: Users },
   { href: '/import', label: 'Import Data', icon: Upload },
 ]
 

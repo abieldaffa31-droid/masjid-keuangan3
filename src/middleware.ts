@@ -24,9 +24,10 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const isLoginPage = request.nextUrl.pathname === '/login'
-  // Biarkan asset statis & API route lewat tanpa auth
+  // Biarkan asset statis & halaman publik lewat tanpa auth
   const isPublic = request.nextUrl.pathname.startsWith('/_next') ||
-    request.nextUrl.pathname.startsWith('/favicon')
+    request.nextUrl.pathname.startsWith('/favicon') ||
+    request.nextUrl.pathname.startsWith('/jamaah')
 
   if (isPublic) return supabaseResponse
 
