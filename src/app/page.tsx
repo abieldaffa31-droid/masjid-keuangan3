@@ -25,7 +25,9 @@ async function getDashboardData() {
     await Promise.all([
       supabase
         .from('transaksi')
-        .select('jenis, jumlah, kategori'),
+        .select('saldo')
+        .order('id', { ascending: false })
+        .limit(1),
       supabase
         .from('transaksi')
         .select('jenis, jumlah')
@@ -42,12 +44,7 @@ async function getDashboardData() {
         .select('jenis_hewan, grup, harga, status, jumlah'),
     ])
 
-  // Saldo operasional = semua masuk (non-wakaf) - semua keluar
-  const saldoBank = (transaksiResult.data ?? []).reduce((s, t) => {
-    if (t.jenis === 'masuk' && !/wakaf/i.test(t.kategori ?? '')) return s + t.jumlah
-    if (t.jenis === 'keluar') return s - t.jumlah
-    return s
-  }, 0)
+  const saldoTotal = transaksiResult.data?.[0]?.saldo ?? 0
 
   let totalMasuk = 0
   let totalKeluar = 0
@@ -58,6 +55,9 @@ async function getDashboardData() {
 
   const totalWakafDB = wakafResult.data?.reduce((sum, w) => sum + w.jumlah, 0) ?? 0
   const totalWakaf = totalWakafDB || CURRENT_WAKAF_DEFAULT
+
+  // Saldo operasional = saldo bank total - dana wakaf terkumpul
+  const saldoBank = saldoTotal - totalWakaf
 
   const totalJumatBulanIni =
     jumatResult.data?.reduce((sum, j) => sum + (j.total ?? 0), 0) ?? 0
