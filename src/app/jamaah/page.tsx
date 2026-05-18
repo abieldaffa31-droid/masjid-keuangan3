@@ -68,8 +68,8 @@ async function getData(dari: string, sampai: string) {
   const jumlahKambing = qurbanList
     .filter(r => r.jenis_hewan === 'Kambing')
     .reduce((s, r) => s + ((r as { jumlah?: number }).jumlah ?? 1), 0)
-  const lunas = qurbanList.filter(r => r.status === 'Lunas').length
-  const totalPeserta = qurbanList.filter(r => r.jenis_hewan === 'Sapi').length
+  const lunas = sapiList.filter(r => r.status === 'Lunas').length
+  const totalPeserta = sapiList.length
 
   const tanggalUpdate = new Intl.DateTimeFormat('id-ID', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
