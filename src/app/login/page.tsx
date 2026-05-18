@@ -21,7 +21,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      setError(error.message)
+      setError(error.message + ' | URL: ' + process.env.NEXT_PUBLIC_SUPABASE_URL)
       setLoading(false)
       return
     }
