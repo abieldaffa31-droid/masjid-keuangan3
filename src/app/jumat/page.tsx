@@ -44,6 +44,8 @@ export default async function JumatPage() {
       .eq('jenis', 'masuk')
 
     // Kelompokkan ke pekan masing-masing (tanggal_jumat sebagai key)
+    // Online = INFAQ QRIS + DONASI TRANSFER saja (INFAQ TUNAI/kotak amal tidak masuk)
+    const ONLINE_KATEGORI = new Set(['INFAQ QRIS', 'DONASI TRANSFER'])
     if (masukList) {
       for (const row of list) {
         const weekEnd = addDays(row.tanggal_jumat, 6)
@@ -51,7 +53,7 @@ export default async function JumatPage() {
           .filter(t =>
             t.tanggal >= row.tanggal_jumat &&
             t.tanggal <= weekEnd &&
-            !/wakaf/i.test(t.kategori ?? '')
+            ONLINE_KATEGORI.has(t.kategori ?? '')
           )
           .reduce((s, t) => s + t.jumlah, 0)
       }
