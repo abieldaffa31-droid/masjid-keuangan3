@@ -32,17 +32,29 @@ export default async function JumatPage() {
   const list = jumatList ?? []
 
   // Ambil semua transaksi masuk untuk menghitung online infaq per pekan
+  // Supabase caps at 1000 rows per request — fetch 3 pages in parallel to be safe
   const onlinePerPekan: Record<string, number> = {}
   if (list.length > 0) {
     const dateMin = list[list.length - 1].tanggal_jumat
     const dateMax = addDays(list[0].tanggal_jumat, 6)
-    const { data: masukList } = await supabase
+    const baseQuery = () => supabase
       .from('transaksi')
       .select('tanggal, jumlah, kategori')
       .gte('tanggal', dateMin)
       .lte('tanggal', dateMax)
       .eq('jenis', 'masuk')
-      .range(0, 9999)
+      .order('tanggal', { ascending: true })
+
+    const [p1, p2, p3] = await Promise.all([
+      baseQuery().range(0, 999),
+      baseQuery().range(1000, 1999),
+      baseQuery().range(2000, 2999),
+    ])
+    const masukList = [
+      ...(p1.data ?? []),
+      ...(p2.data ?? []),
+      ...(p3.data ?? []),
+    ]
 
     // Kelompokkan ke pekan masing-masing (tanggal_jumat sebagai key)
     // Online = INFAQ QRIS + DONASI TRANSFER saja (INFAQ TUNAI/kotak amal tidak masuk)
