@@ -42,6 +42,7 @@ export default async function JumatPage() {
       .gte('tanggal', dateMin)
       .lte('tanggal', dateMax)
       .eq('jenis', 'masuk')
+      .range(0, 9999)
 
     // Kelompokkan ke pekan masing-masing (tanggal_jumat sebagai key)
     // Online = INFAQ QRIS + DONASI TRANSFER saja (INFAQ TUNAI/kotak amal tidak masuk)
