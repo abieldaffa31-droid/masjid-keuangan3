@@ -11,37 +11,59 @@ export interface CSVRow {
 }
 
 const KATEGORI_KEYWORDS: Array<{ pattern: RegExp; kategori: string }> = [
-  { pattern: /INFAQ|INFAK/i, kategori: 'Infaq' },
-  { pattern: /WAKAF/i, kategori: 'Wakaf' },
-  { pattern: /DONASI|SHODAQOH|SEDEKAH|SHADAQAH|ZAKAT/i, kategori: 'Donasi' },
-  { pattern: /LISTRIK|PLN|AIR|PDAM|WIFI|INTERNET|TELEPON|TOKEN/i, kategori: 'Operasional' },
-  { pattern: /HONOR|GAJI|TPP|INSENTIF|IMAM|MUADZIN|MARBOT|KARYAWAN/i, kategori: 'SDM' },
-  { pattern: /ATK|ALAT|KEBERSIHAN|SARANA|PERALATAN|PEMBELIAN/i, kategori: 'Sarana' },
-  { pattern: /PEMBANGUNAN|RENOVASI|KONSTRUKSI|MATERIAL/i, kategori: 'Pembangunan' },
+  // QRIS / QR Code payments
+  { pattern: /^QR \d+|^QRIS \d+/i,                                             kategori: 'INFAQ QRIS' },
+  // Wakaf
+  { pattern: /WAKAF/i,                                                          kategori: 'Wakaf' },
+  // SDM / honorarium
+  { pattern: /MUKAFAAH|HONOR|GAJI|TPP|INSENTIF|IMAM|MUADZIN|MARBOT|KARYAWAN|PENGAJUAN IBADAH|PENGAJUAN MEDIA|TAHSIN|SDM/i, kategori: 'SDM' },
+  // Infaq incoming
+  { pattern: /INFAQ|INFAK/i,                                                    kategori: 'Infaq' },
+  // Donasi/transfer
+  { pattern: /DONASI|SHODAQOH|SEDEKAH|SHADAQAH|ZAKAT/i,                       kategori: 'Donasi' },
+  // Operational expenses
+  { pattern: /LISTRIK|PLN|AIR|PDAM|WIFI|INTERNET|TELEPON|TOKEN|GALON|BIAYA PEMINDAHBUKUAN|ADMIN|KONSUMSI|BELANJA BULANAN|SNACK|MAKAN|CATERING/i, kategori: 'Operasional' },
+  // Sarana
+  { pattern: /ATK|ALAT|KEBERSIHAN|SARANA|PERALATAN|PEMBELIAN|SERVIS|CETAK|PERBAIKAN/i, kategori: 'Sarana' },
+  // Pembangunan
+  { pattern: /PEMBANGUNAN|RENOVASI|KONSTRUKSI|MATERIAL/i,                      kategori: 'Pembangunan' },
 ]
 
-export function autoKategori(deskripsi: string): string {
+export function autoKategori(deskripsi: string, jenis?: 'masuk' | 'keluar'): string {
   for (const { pattern, kategori } of KATEGORI_KEYWORDS) {
     if (pattern.test(deskripsi)) return kategori
   }
-  return 'Umum'
+  // Fallback: incoming transfers not matched → DONASI TRANSFER
+  if (jenis === 'masuk') return 'DONASI TRANSFER'
+  return 'Operasional'
 }
 
 function parseDate(raw: string): string {
-  // DD/MM/YYYY or DD-MM-YYYY → YYYY-MM-DD
-  const parts = raw.trim().split(/[\/\-]/)
-  if (parts.length === 3) {
-    const [d, m, y] = parts
-    if (y.length === 4) return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
-    // Already YYYY-MM-DD
-    return raw.trim()
+  const trimmed = raw.trim()
+  // Already YYYY-MM-DD or YYYY-MM-DD HH:MM:SS
+  if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return trimmed.slice(0, 10)
+  // DD/MM/YYYY or DD-MM-YYYY
+  const parts = trimmed.split(/[\/\-]/)
+  if (parts.length >= 3) {
+    const [a, b, c] = parts
+    if (c.length === 4) return `${c}-${b.padStart(2, '0')}-${a.padStart(2, '0')}`
   }
-  return raw.trim()
+  return trimmed
 }
 
 function parseNominal(raw: string): number {
-  // Remove thousand separators (dots in ID format) and convert
-  return parseInt(raw.replace(/\./g, '').replace(/,\d+$/, '').trim()) || 0
+  const cleaned = raw.trim()
+  if (!cleaned) return 0
+  // "1,200,000.00" format (comma=thousands, period=decimal) — BSI new export
+  if (/^\d{1,3}(,\d{3})*(\.\d+)?$/.test(cleaned)) {
+    return Math.round(parseFloat(cleaned.replace(/,/g, '')) || 0)
+  }
+  // "1.200.000,00" format (period=thousands, comma=decimal) — BSI old export
+  if (/^\d{1,3}(\.\d{3})*(,\d+)?$/.test(cleaned)) {
+    return Math.round(parseFloat(cleaned.replace(/\./g, '').replace(',', '.')) || 0)
+  }
+  // Plain integer like "5" or "617"
+  return Math.round(parseFloat(cleaned.replace(/[.,]/g, '')) || 0)
 }
 
 export function parseCSVBSI(content: string): CSVRow[] {
@@ -55,41 +77,70 @@ export function parseCSVBSI(content: string): CSVRow[] {
   const firstLine = lines[0]
   const sep = firstLine.includes(';') ? ';' : ','
 
-  // Skip header row(s) — find first row that looks like data (starts with a date-like value)
+  // Detect number of columns from header
+  const headerCols = firstLine.split(sep).length
+  // BSI new format: Date;FT;Desc;Currency;Amount;CR;Balance (7 cols)
+  // BSI old format: Date;FT;Desc;Amount;CR;Balance (6 cols)
+  const hasCurrencyCol = headerCols >= 7
+
+  // Skip header row(s) — find first row with a date-like value
   let startIdx = 1
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(sep)
-    if (cols[0] && /\d{2}[\/\-]\d{2}[\/\-]\d{4}/.test(cols[0].trim())) {
+    const dateCell = cols[0]?.trim() ?? ''
+    if (
+      /\d{4}-\d{2}-\d{2}/.test(dateCell) ||
+      /\d{2}[\/\-]\d{2}[\/\-]\d{4}/.test(dateCell)
+    ) {
       startIdx = i
       break
     }
   }
 
-  return lines
-    .slice(startIdx)
-    .map((line, idx) => {
-      // Handle quoted fields
-      const cols = line
-        .split(sep)
-        .map((c) => c.trim().replace(/^["']|["']$/g, ''))
+  const result: CSVRow[] = []
 
-      const [tanggalRaw = '', ftNumber = '', deskripsi = '', nominalRaw = '0', dbcr = '', saldoRaw = '0'] = cols
+  lines.slice(startIdx).forEach((line, idx) => {
+    const cols = line
+      .split(sep)
+      .map((c) => c.trim().replace(/^["']|["']$/g, ''))
 
-      const nominal = parseNominal(nominalRaw)
-      const saldo = parseNominal(saldoRaw)
-      const jenis: 'masuk' | 'keluar' = dbcr.toUpperCase().includes('CR') ? 'masuk' : 'keluar'
+    let tanggalRaw = ''
+    let ftNumber = ''
+    let deskripsi = ''
+    let nominalRaw = '0'
+    let dbcr = ''
+    let saldoRaw = '0'
 
-      return {
-        id: `row-${idx}`,
-        tanggal: parseDate(tanggalRaw),
-        ftNumber,
-        deskripsi: deskripsi.trim(),
-        nominal,
-        jenis,
-        saldo,
-        kategori: autoKategori(deskripsi),
-        selected: true,
-      }
+    if (hasCurrencyCol && cols.length >= 7) {
+      // 7-col: Date | FT | Desc | Currency | Amount | CR/DB | Balance
+      ;[tanggalRaw, ftNumber, deskripsi, , nominalRaw, dbcr, saldoRaw] = cols
+    } else {
+      // 6-col: Date | FT | Desc | Amount | CR/DB | Balance
+      ;[tanggalRaw, ftNumber, deskripsi, nominalRaw, dbcr, saldoRaw] = cols
+    }
+
+    const tanggal = parseDate(tanggalRaw)
+    if (!tanggal || !/^\d{4}-\d{2}-\d{2}$/.test(tanggal)) return
+    if (!deskripsi || deskripsi.length < 2) return
+
+    const nominal = parseNominal(nominalRaw)
+    if (nominal <= 0) return
+
+    const saldo = parseNominal(saldoRaw)
+    const jenis: 'masuk' | 'keluar' = dbcr.toUpperCase().includes('CR') ? 'masuk' : 'keluar'
+
+    result.push({
+      id: `row-${idx}`,
+      tanggal,
+      ftNumber,
+      deskripsi: deskripsi.trim(),
+      nominal,
+      jenis,
+      saldo,
+      kategori: autoKategori(deskripsi, jenis),
+      selected: true,
     })
-    .filter((r) => r.tanggal && r.nominal > 0 && r.deskripsi)
+  })
+
+  return result
 }
