@@ -13,11 +13,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { parseCSVBSI, type CSVRow } from './csvParser'
+import { ALL_COA_KATEGORI } from '@/lib/coa'
 import { supabase } from '@/lib/supabase'
 import { formatRupiah, formatTanggalPendek } from '@/lib/format'
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Info } from 'lucide-react'
 
-const KATEGORI_LIST = ['Infaq', 'Donasi', 'Wakaf', 'Operasional', 'SDM', 'Sarana', 'Pembangunan', 'Umum']
+const KATEGORI_LIST = ALL_COA_KATEGORI
 
 type SaveStatus = 'idle' | 'saving' | 'success' | 'error'
 

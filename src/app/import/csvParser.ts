@@ -1,3 +1,5 @@
+import { autoKategoriCOA } from '@/lib/coa'
+
 export interface CSVRow {
   id: string
   tanggal: string
@@ -10,32 +12,8 @@ export interface CSVRow {
   selected: boolean
 }
 
-const KATEGORI_KEYWORDS: Array<{ pattern: RegExp; kategori: string }> = [
-  // QRIS / QR Code payments
-  { pattern: /^QR \d+|^QRIS \d+/i,                                             kategori: 'INFAQ QRIS' },
-  // Wakaf
-  { pattern: /WAKAF/i,                                                          kategori: 'Wakaf' },
-  // SDM / honorarium
-  { pattern: /MUKAFAAH|HONOR|GAJI|TPP|INSENTIF|IMAM|MUADZIN|MARBOT|KARYAWAN|PENGAJUAN IBADAH|PENGAJUAN MEDIA|TAHSIN|SDM/i, kategori: 'SDM' },
-  // Infaq incoming
-  { pattern: /INFAQ|INFAK/i,                                                    kategori: 'Infaq' },
-  // Donasi/transfer
-  { pattern: /DONASI|SHODAQOH|SEDEKAH|SHADAQAH|ZAKAT/i,                       kategori: 'Donasi' },
-  // Operational expenses
-  { pattern: /LISTRIK|PLN|AIR|PDAM|WIFI|INTERNET|TELEPON|TOKEN|GALON|BIAYA PEMINDAHBUKUAN|ADMIN|KONSUMSI|BELANJA BULANAN|SNACK|MAKAN|CATERING/i, kategori: 'Operasional' },
-  // Sarana
-  { pattern: /ATK|ALAT|KEBERSIHAN|SARANA|PERALATAN|PEMBELIAN|SERVIS|CETAK|PERBAIKAN/i, kategori: 'Sarana' },
-  // Pembangunan
-  { pattern: /PEMBANGUNAN|RENOVASI|KONSTRUKSI|MATERIAL/i,                      kategori: 'Pembangunan' },
-]
-
 export function autoKategori(deskripsi: string, jenis?: 'masuk' | 'keluar'): string {
-  for (const { pattern, kategori } of KATEGORI_KEYWORDS) {
-    if (pattern.test(deskripsi)) return kategori
-  }
-  // Fallback: incoming transfers not matched → DONASI TRANSFER
-  if (jenis === 'masuk') return 'DONASI TRANSFER'
-  return 'Operasional'
+  return autoKategoriCOA(deskripsi, jenis ?? 'keluar')
 }
 
 function parseDate(raw: string): string {
@@ -137,7 +115,7 @@ export function parseCSVBSI(content: string): CSVRow[] {
       nominal,
       jenis,
       saldo,
-      kategori: autoKategori(deskripsi, jenis),
+      kategori: autoKategoriCOA(deskripsi.trim(), jenis),
       selected: true,
     })
   })

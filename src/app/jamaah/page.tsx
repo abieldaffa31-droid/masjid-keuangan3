@@ -87,13 +87,19 @@ async function getData(dari: string, sampai: string) {
 }
 
 const KATEGORI_COLOR: Record<string, string> = {
-  'Operasional': 'bg-blue-500',
-  'SDM': 'bg-purple-500',
-  'Sarana': 'bg-orange-500',
-  'Pembangunan': 'bg-red-500',
-  'Infaq': 'bg-green-500',
-  'Donasi': 'bg-teal-500',
-  'Umum': 'bg-gray-400',
+  // Keluar (COA)
+  'IBADAH & DAKWAH':  'bg-emerald-500',
+  'KERUMAHTANGGAAN':  'bg-blue-500',
+  'MEDIA':            'bg-violet-500',
+  'OPERASIONAL UMUM': 'bg-amber-500',
+  'TITIPAN KELUAR':   'bg-rose-400',
+  'TITIPAN':          'bg-pink-400',
+  // Masuk (COA)
+  'INFAQ QRIS':       'bg-sky-500',
+  'INFAQ TUNAI':      'bg-green-500',
+  'DONASI TRANSFER':  'bg-teal-500',
+  'TITIPAN MASUK':    'bg-indigo-400',
+  'UANG MASUK':       'bg-cyan-500',
 }
 function getColor(k: string) { return KATEGORI_COLOR[k] ?? 'bg-slate-400' }
 
