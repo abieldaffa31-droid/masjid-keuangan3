@@ -37,11 +37,15 @@ async function getData(dari: string, sampai: string) {
   const totalWakaf = totalWakafDB || CURRENT_WAKAF_DEFAULT
   const progressWakaf = Math.min((totalWakaf / TARGET_WAKAF) * 100, 100)
 
-  // Bulan ini
-  let pemasukanBulan = 0, pengeluaranBulan = 0
+  // Bulan ini — pemasukan online only (QRIS + transfer bank, exclude tunai/kotak)
+  const KATEGORI_ONLINE = new Set(['INFAQ QRIS', 'DONASI TRANSFER'])
+  let pemasukanOnline = 0, pengeluaranBulan = 0
   transBulanRes.data?.forEach(t => {
-    if (t.jenis === 'masuk') pemasukanBulan += t.jumlah
-    else pengeluaranBulan += t.jumlah
+    if (t.jenis === 'masuk') {
+      if (KATEGORI_ONLINE.has(t.kategori)) pemasukanOnline += t.jumlah
+    } else {
+      pengeluaranBulan += t.jumlah
+    }
   })
 
   // Infaq Jumat bulan ini
@@ -79,7 +83,7 @@ async function getData(dari: string, sampai: string) {
 
   return {
     totalWakaf, progressWakaf,
-    pemasukanBulan, pengeluaranBulan, infaqJumatBulan,
+    pemasukanOnline, pengeluaranBulan, infaqJumatBulan,
     keluarSorted, totalKeluarPeriode,
     jumlahSapi, jumlahKambing, lunas, totalPeserta,
     tanggalUpdate, namaBulan,
@@ -140,8 +144,8 @@ export default async function JamaahPage({ searchParams }: PageProps) {
         {/* KPI Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
-            <p className="text-xs text-gray-400 mb-1">Pemasukan {d.namaBulan}</p>
-            <p className="text-xl font-bold text-green-600">{formatRupiah(d.pemasukanBulan)}</p>
+            <p className="text-xs text-gray-400 mb-1">Pemasukan Online {d.namaBulan}</p>
+            <p className="text-xl font-bold text-green-600">{formatRupiah(d.pemasukanOnline)}</p>
           </div>
           <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
             <p className="text-xs text-gray-400 mb-1">Pengeluaran {d.namaBulan}</p>
@@ -153,8 +157,8 @@ export default async function JamaahPage({ searchParams }: PageProps) {
           </div>
           <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
             <p className="text-xs text-gray-400 mb-1">Selisih Bulan Ini</p>
-            <p className={`text-xl font-bold ${d.pemasukanBulan - d.pengeluaranBulan >= 0 ? 'text-blue-600' : 'text-orange-500'}`}>
-              {d.pemasukanBulan - d.pengeluaranBulan >= 0 ? '+' : ''}{formatRupiah(d.pemasukanBulan - d.pengeluaranBulan)}
+            <p className={`text-xl font-bold ${d.pemasukanOnline - d.pengeluaranBulan >= 0 ? 'text-blue-600' : 'text-orange-500'}`}>
+              {d.pemasukanOnline - d.pengeluaranBulan >= 0 ? '+' : ''}{formatRupiah(d.pemasukanOnline - d.pengeluaranBulan)}
             </p>
           </div>
         </div>
