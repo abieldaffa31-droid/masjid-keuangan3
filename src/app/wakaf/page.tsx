@@ -47,7 +47,7 @@ export default async function WakafPage({
 
   const jumlahWakif = totalCount ?? 0
   const totalBSI    = (statsRows ?? []).reduce((s, r) => s + (r.uang_masuk ?? 0), 0)
-  const totalWakaf  = WAKAF_AWAL
+  const totalWakaf  = WAKAF_AWAL + totalBSI   // saldo awal + semua transaksi di database
   const progressWakaf = Math.min((totalWakaf / TARGET_WAKAF) * 100, 100)
   const rataRata    = jumlahWakif > 0 ? Math.round(totalBSI / jumlahWakif) : 0
   const totalPages  = Math.ceil(jumlahWakif / PAGE_SIZE)

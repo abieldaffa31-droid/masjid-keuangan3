@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic'
 
 const TARGET_WAKAF = 2_500_000_000
 const CURRENT_WAKAF_DEFAULT = 1_447_439_609
+const WAKAF_SALDO_AWAL      = 1_447_439_609   // saldo sebelum transaksi_wakaf dicatat di DB
 
 async function getData(dari: string, sampai: string) {
   noStore()
@@ -18,7 +19,7 @@ async function getData(dari: string, sampai: string) {
   const lastDay = new Date(thn, bln, 0).getDate()
 
   const [wakafRes, transBulanRes, transPerkanRes, jumatRes, qurbanRes] = await Promise.all([
-    supabase.from('wakaf').select('jumlah'),
+    supabase.from('transaksi_wakaf').select('uang_masuk').gt('uang_masuk', 0),
     supabase.from('transaksi').select('jenis, jumlah, kategori')
       .gte('tanggal', `${bulanIni}-01`)
       .lte('tanggal', `${bulanIni}-${String(lastDay).padStart(2,'0')}`),
@@ -32,9 +33,9 @@ async function getData(dari: string, sampai: string) {
     supabase.from('hewan_qurban').select('jenis_hewan, grup, harga, status, keterangan, jumlah'),
   ])
 
-  // Wakaf
-  const totalWakafDB = wakafRes.data?.reduce((s, w) => s + w.jumlah, 0) ?? 0
-  const totalWakaf = totalWakafDB || CURRENT_WAKAF_DEFAULT
+  // Wakaf — saldo awal + sum semua transaksi di transaksi_wakaf
+  const totalBSIWakaf = wakafRes.data?.reduce((s, w) => s + (w.uang_masuk ?? 0), 0) ?? 0
+  const totalWakaf = WAKAF_SALDO_AWAL + totalBSIWakaf
   const progressWakaf = Math.min((totalWakaf / TARGET_WAKAF) * 100, 100)
 
   // Bulan ini — pemasukan online only (QRIS + transfer bank, exclude tunai/kotak)
