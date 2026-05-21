@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 const TARGET_WAKAF = 2_500_000_000
 const CURRENT_WAKAF_DEFAULT = 1_447_439_609
-const WAKAF_SALDO_AWAL      = 1_447_439_609   // saldo sebelum transaksi_wakaf dicatat di DB
+const WAKAF_SALDO_AWAL      = 1_208_537_655   // saldo sebelum transaksi_wakaf dicatat di DB
 
 async function getData(dari: string, sampai: string) {
   noStore()

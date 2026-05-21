@@ -15,7 +15,7 @@ import { TambahWakafDialog } from './TambahWakafDialog'
 import Link from 'next/link'
 
 const TARGET_WAKAF = 2_500_000_000
-const WAKAF_AWAL   = 1_447_439_609
+const WAKAF_AWAL   = 1_208_537_655   // saldo sebelum transaksi_wakaf dicatat di DB
 const PAGE_SIZE    = 50
 
 const SUMBER_COLOR: Record<string, string> = {
