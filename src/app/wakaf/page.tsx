@@ -15,7 +15,7 @@ import { TambahWakafDialog } from './TambahWakafDialog'
 import Link from 'next/link'
 
 const TARGET_WAKAF = 2_500_000_000
-const WAKAF_AWAL   = 1_208_537_655   // saldo sebelum transaksi_wakaf dicatat di DB
+const WAKAF_AWAL   = 1_448_286_109
 const PAGE_SIZE    = 50
 
 const SUMBER_COLOR: Record<string, string> = {
@@ -47,7 +47,7 @@ export default async function WakafPage({
 
   const jumlahWakif = totalCount ?? 0
   const totalBSI    = (statsRows ?? []).reduce((s, r) => s + (r.uang_masuk ?? 0), 0)
-  const totalWakaf  = WAKAF_AWAL + totalBSI   // saldo awal + semua transaksi di database
+  const totalWakaf  = WAKAF_AWAL
   const progressWakaf = Math.min((totalWakaf / TARGET_WAKAF) * 100, 100)
   const rataRata    = jumlahWakif > 0 ? Math.round(totalBSI / jumlahWakif) : 0
   const totalPages  = Math.ceil(jumlahWakif / PAGE_SIZE)

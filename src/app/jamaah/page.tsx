@@ -8,8 +8,8 @@ import Image from 'next/image'
 export const dynamic = 'force-dynamic'
 
 const TARGET_WAKAF = 2_500_000_000
-const CURRENT_WAKAF_DEFAULT = 1_447_439_609
-const WAKAF_SALDO_AWAL      = 1_208_537_655   // saldo sebelum transaksi_wakaf dicatat di DB
+const CURRENT_WAKAF_DEFAULT = 1_448_286_109
+const WAKAF_SALDO_AWAL      = 1_448_286_109
 
 async function getData(dari: string, sampai: string) {
   noStore()
@@ -33,9 +33,8 @@ async function getData(dari: string, sampai: string) {
     supabase.from('hewan_qurban').select('jenis_hewan, grup, harga, status, keterangan, jumlah'),
   ])
 
-  // Wakaf — saldo awal + sum semua transaksi di transaksi_wakaf
-  const totalBSIWakaf = wakafRes.data?.reduce((s, w) => s + (w.uang_masuk ?? 0), 0) ?? 0
-  const totalWakaf = WAKAF_SALDO_AWAL + totalBSIWakaf
+  // Wakaf
+  const totalWakaf = WAKAF_SALDO_AWAL
   const progressWakaf = Math.min((totalWakaf / TARGET_WAKAF) * 100, 100)
 
   // Bulan ini — pemasukan online only (QRIS + transfer bank, exclude tunai/kotak)
